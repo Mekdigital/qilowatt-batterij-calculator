@@ -9,10 +9,10 @@ test('profielen tellen op tot 1', function () {
 });
 test('standaardwaarden uit het ontwerp', function () {
   var a = QWModel.STANDAARD_AANNAMES, i = QWModel.STANDAARD_INVOER;
-  eq(a.stroomprijs, 0.27); eq(a.vergoeding, 0.09); eq(a.terugleverkosten, 0.05);
+  eq(a.stroomprijs, 0.32); eq(a.vergoeding, 0.09); eq(a.terugleverkosten, 0.05);
   eq(a.middagprijsDyn, 0.05); eq(a.piekprijsDyn, 0.15); eq(a.directAandeel, 0.30);
   eq(a.rendement, 0.90); eq(a.degradatie, 0.02); eq(a.horizon, 15);
-  eq(a.prijsverschil, 0.12); eq(a.handelsdagen, 250); eq(a.prijsstijging, 0);
+  eq(a.prijsverschil, 0.12); eq(a.handelsdagen, 250); eq(a.prijsstijging, 0.02);
   eq(i.verbruik, 3000); eq(i.panelen, 10); eq(i.opbrengstPerPaneel, 350);
   eq(i.capaciteit, 10); eq(i.contract, 'vast'); eq(i.warmtepomp, 'geen');
   eq(i.kmPerJaar, 15000); eq(i.thuisladenAandeel, 0.8); eq(i.kwhPerKm, 0.19);
@@ -44,19 +44,19 @@ var A = QWModel.STANDAARD_AANNAMES, I = QWModel.STANDAARD_INVOER;
 function jaar(over, aOver) { return QWModel.berekenJaar(Object.assign({}, I, over || {}), Object.assign({}, A, aOver || {}), 0); }
 test('voorbeeldhuishouden vast 10 kWh', function () {
   var r = jaar();
-  near(r.zon, 261.3, 1); eq(r.inkoop, 0); eq(r.verkoop, 0); near(r.totaal, 261.3, 1);
-  near(r.verliesZonderBatterij, 563.5, 1);
+  near(r.zon, 319.2, 1); eq(r.inkoop, 0); eq(r.verkoop, 0); near(r.totaal, 319.2, 1);
+  near(r.verliesZonderBatterij, 686.0, 1);
   near(r.eigenVerbruikZonder, 0.300, 0.005); near(r.eigenVerbruikMet, 0.668, 0.005);
   near(r.terugleverZonder, 2450, 1); near(r.terugleverMet, 1163, 1);
   eq(r.maanden.length, 12);
 });
 test('zonlaag vlakt af boven de avondvraag', function () {
-  near(jaar({ capaciteit: 5 }).zon, 250.8, 1);
-  near(jaar({ capaciteit: 20 }).zon, 261.3, 1);
+  near(jaar({ capaciteit: 5 }).zon, 306.4, 1);
+  near(jaar({ capaciteit: 20 }).zon, 319.2, 1);
 });
 test('dynamisch 10 kWh: drie lagen', function () {
   var r = jaar({ contract: 'dynamisch' });
-  near(r.zon, 248.4, 1); near(r.inkoop, 65.1, 1); near(r.verkoop, 65.6, 1); near(r.totaal, 379.1, 1);
+  near(r.zon, 306.3, 1); near(r.inkoop, 65.1, 1); near(r.verkoop, 65.6, 1); near(r.totaal, 437.0, 1);
   near(r.terugleverMet, 1050, 1);
 });
 test('seizoenen: inkoop nul in juni, verkoop nul in januari', function () {
@@ -72,11 +72,11 @@ test('geen zon: vast nul, dynamisch alleen inkoop', function () {
 });
 test('warmtepomp en auto dynamisch 15 kWh', function () {
   var r = jaar({ warmtepomp: 'volledig', auto: true, contract: 'dynamisch', capaciteit: 15 });
-  near(r.zon, 472.9, 1); near(r.inkoop, 197.1, 1); near(r.verkoop, 0, 0.5); near(r.eigenVerbruikMet, 1.0, 0.005);
+  near(r.zon, 583.1, 1); near(r.inkoop, 197.1, 1); near(r.verkoop, 0, 0.5); near(r.eigenVerbruikMet, 1.0, 0.005);
 });
 test('netto negatieve teruglevering verhoogt de zonlaag', function () {
   var r = jaar({}, { terugleverkosten: 0.12 });
-  near(r.zon, 351.4, 1); near(r.verliesZonderBatterij, 735.0, 1);
+  near(r.zon, 409.3, 1); near(r.verliesZonderBatterij, 857.5, 1);
 });
 test('degradatie: jaar 2 heeft 98 procent capaciteit', function () {
   var i = Object.assign({}, I, { capaciteit: 5 });
@@ -97,21 +97,21 @@ test('adviesCapaciteit', function () {
 test('bereken vast 10 kWh: geen terugverdientijd binnen 15 jaar', function () {
   var b = QWModel.bereken(I, A);
   eq(b.investering, 6171); eq(b.nettoInvestering, 6171); eq(b.btwTeruggave, false);
-  eq(b.jaren.length, 15); near(b.totaalHorizon, 3919, 2); eq(b.terugverdientijd, null);
-  near(b.jaar1.zon, 261.3, 1); eq(b.advies, 7);
+  eq(b.jaren.length, 15); near(b.totaalHorizon, 5520, 3); eq(b.terugverdientijd, null);
+  near(b.jaar1.zon, 319.2, 1); eq(b.advies, 7);
 });
 test('bereken dynamisch 10 kWh: btw terug en 14 jaar', function () {
   var b = QWModel.bereken(Object.assign({}, I, { contract: 'dynamisch' }), A);
-  eq(b.btwTeruggave, true); near(b.nettoInvestering, 5100, 1); near(b.totaalHorizon, 5433, 2); near(b.terugverdientijd, 14.03, 0.05);
+  eq(b.btwTeruggave, true); near(b.nettoInvestering, 5100, 1); near(b.totaalHorizon, 7249, 3); near(b.terugverdientijd, 10.85, 0.05);
 });
-test('bereken warmtepomp en auto dynamisch 15 kWh: 9,4 jaar', function () {
+test('bereken warmtepomp en auto dynamisch 15 kWh: 7,5 jaar', function () {
   var b = QWModel.bereken(Object.assign({}, I, { warmtepomp: 'volledig', auto: true, contract: 'dynamisch', capaciteit: 15 }), A);
-  near(b.terugverdientijd, 9.43, 0.05); near(b.totaalHorizon, 9481, 3);
+  near(b.terugverdientijd, 7.5, 0.05); near(b.totaalHorizon, 12803, 5);
 });
 test('prijsstijging en eigen investering', function () {
-  near(QWModel.bereken(I, Object.assign({}, A, { prijsstijging: 0.02 })).totaalHorizon, 4519, 2);
+  near(QWModel.bereken(I, Object.assign({}, A, { prijsstijging: 0.04 })).totaalHorizon, 6392, 3);
   var b = QWModel.bereken(I, Object.assign({}, A, { investering: 3000, btwTeruggave: true }));
-  eq(b.investering, 3000); near(b.nettoInvestering, 2479.3, 0.1); ok(b.terugverdientijd > 9 && b.terugverdientijd < 11, 'rond 10 jaar');
+  eq(b.investering, 3000); near(b.nettoInvestering, 2479.3, 0.1); near(b.terugverdientijd, 7.29, 0.05);
 });
 test('bereken normaliseert rommelinvoer zelf', function () {
   var b = QWModel.bereken({ capaciteit: 999, verbruik: 'x' }, {});

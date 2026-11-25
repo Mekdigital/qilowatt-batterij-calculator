@@ -10,9 +10,9 @@ test('mount rendert standaardresultaat', function () {
   eq(document.getElementById('qw-capaciteit').value, '7', 'slider start op het advies');
   ok(window.QWCalc && window.QWCalc._instanties.length === 1, 'één instantie gemount');
   ok(root.querySelector('#qw-resultaat'), 'resultaat aanwezig');
-  ok(txt('qw-r-zon').indexOf('€ 261') >= 0, 'zonlaag € 261: ' + txt('qw-r-zon'));
-  ok(txt('qw-r-verlies').indexOf('€ 564') >= 0 || txt('qw-r-verlies').indexOf('€ 563') >= 0, 'verlies: ' + txt('qw-r-verlies'));
-  ok(txt('qw-r-tvt').indexOf('langer dan 15 jaar') >= 0, 'tvt tekst: ' + txt('qw-r-tvt'));
+  ok(txt('qw-r-zon').indexOf('€ 319') >= 0, 'zonlaag € 319: ' + txt('qw-r-zon'));
+  ok(txt('qw-r-verlies').indexOf('€ 686') >= 0, 'verlies: ' + txt('qw-r-verlies'));
+  ok(txt('qw-r-tvt').indexOf('13,5 jaar') >= 0, 'tvt tekst: ' + txt('qw-r-tvt'));
   ok(txt('qw-r-ev').indexOf('30%') >= 0 && txt('qw-r-ev').indexOf('67%') >= 0, 'eigen verbruik: ' + txt('qw-r-ev'));
   ok(!document.getElementById('qw-r-dynhaak').hidden && txt('qw-r-dynhaak').length > 0, 'dynamische haak zichtbaar bij vast');
   ok(document.getElementById('qw-r-inkoop').hidden, 'inkoop verborgen bij vast');
@@ -20,8 +20,8 @@ test('mount rendert standaardresultaat', function () {
 test('wissel naar dynamisch', function () {
   zet('qw-capaciteit', 10); zet('qw-contract', 'dynamisch');
   ok(!document.getElementById('qw-r-inkoop').hidden, 'inkoop zichtbaar');
-  ok(txt('qw-r-totaal').indexOf('€ 379') >= 0, 'totaal 379: ' + txt('qw-r-totaal'));
-  ok(txt('qw-r-tvt').indexOf('14,0') >= 0, 'tvt 14,0: ' + txt('qw-r-tvt'));
+  ok(txt('qw-r-totaal').indexOf('€ 437') >= 0, 'totaal 437: ' + txt('qw-r-totaal'));
+  ok(txt('qw-r-tvt').indexOf('10,9') >= 0, 'tvt 10,9: ' + txt('qw-r-tvt'));
   ok(document.getElementById('qw-a-btwTeruggave').checked, 'btw aan bij dynamisch');
   ok(document.getElementById('qw-r-dynhaak').hidden, 'haak weg bij dynamisch');
 });
@@ -34,7 +34,7 @@ test('slider en advies', function () {
 });
 test('aanname aanpassen rekent live door', function () {
   zet('qw-capaciteit', 10); zet('qw-a-terugleverkosten', '0.12');
-  ok(txt('qw-r-zon').indexOf('€ 351') >= 0, 'zonlaag 351: ' + txt('qw-r-zon'));
+  ok(txt('qw-r-zon').indexOf('€ 409') >= 0, 'zonlaag 409: ' + txt('qw-r-zon'));
   zet('qw-a-terugleverkosten', '0.05');
 });
 test('rommel in een veld geeft geen NaN', function () {

@@ -44,7 +44,7 @@
   };
 
   var STANDAARD_AANNAMES = {
-    stroomprijs: 0.27,         // euro per kWh all-in
+    stroomprijs: 0.32,         // euro per kWh all-in (Peter 25-11-2026: variabel tarief november 2026)
     vergoeding: 0.09,          // terugleververgoeding 2027, vast contract
     terugleverkosten: 0.05,    // per teruggeleverde kWh, vast contract
     middagprijsDyn: 0.05,      // terugleverprijs op zonnige middaguren, dynamisch
@@ -55,7 +55,7 @@
     horizon: 15,               // jaren
     prijsverschil: 0.12,       // dal versus piek bij dynamisch, all-in
     handelsdagen: 250,         // dagen per jaar met voldoende prijsverschil
-    prijsstijging: 0,          // per jaar
+    prijsstijging: 0.02,       // per jaar (Peter 25-11-2026)
     btwTeruggave: null,        // null: afleiden uit contract (aan bij dynamisch)
     investering: null          // null: uit de tabel
   };

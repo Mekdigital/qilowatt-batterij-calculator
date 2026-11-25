@@ -29,7 +29,7 @@
 
   // Aannames in de volgorde van het paneel. pct: in de UI als procent.
   var AANNAMES = [
-    { k: 'stroomprijs', l: 'Stroomprijs, all-in (€ per kWh)', stap: 0.01, bron: 'Milieu Centraal januari 2026, laadbudget.nl, CBS september 2026 (0,26)' },
+    { k: 'stroomprijs', l: 'Stroomprijs, all-in (€ per kWh)', stap: 0.01, bron: 'Variabel tarief november 2026 (vergelijkingssites 0,26 tot 0,32); Milieu Centraal januari 2026 0,27' },
     { k: 'vergoeding', l: 'Terugleververgoeding 2027, vast contract (€ per kWh)', stap: 0.01, bron: 'Essent, Eneco, Vattenfall, november 2026' },
     { k: 'terugleverkosten', l: 'Terugleverkosten, vast contract (€ per kWh)', stap: 0.01, bron: 'Essent, Eneco, Vattenfall, november 2026; netto 4 cent' },
     { k: 'middagprijsDyn', l: 'Terugleverprijs op zonnige middaguren, dynamisch (€ per kWh)', stap: 0.01, bron: 'Gemiddelde marktprijs op laaduren juli 2025 tot juni 2026 (energievergelijk.nl)' },
@@ -40,7 +40,7 @@
     { k: 'horizon', l: 'Levensduur (jaar, maximaal 50)', stap: 1, max: 50, bron: 'Marktstandaard 15 jaar' },
     { k: 'prijsverschil', l: 'Prijsverschil dal en piek, dynamisch (€ per kWh)', stap: 0.01, bron: 'thuisbatterijreus.nl 10 tot 15 cent, laadbudget 16, thuisbatterijcheck 7,5' },
     { k: 'handelsdagen', l: 'Dagen per jaar met voldoende prijsverschil', stap: 5, bron: 'Qilowatt-blog november 2026 (250), thuisbatterijreus 300' },
-    { k: 'prijsstijging', l: 'Stijging stroomprijs per jaar (%)', stap: 0.5, pct: true, bron: 'Bewust conservatief op 0' },
+    { k: 'prijsstijging', l: 'Stijging stroomprijs per jaar (%)', stap: 0.5, pct: true, bron: 'laadbudget.nl rekent ook met 2 procent per jaar' },
     { k: 'investering', l: 'Investering inclusief btw en installatie (€)', stap: 100, leeg: true, bron: 'Leeg: indicatie uit de Qilowatt-prijslijst van november 2026 voor de gekozen capaciteit' }
   ];
 
