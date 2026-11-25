@@ -83,4 +83,38 @@ test('degradatie: jaar 2 heeft 98 procent capaciteit', function () {
   var j0 = QWModel.berekenJaar(i, A, 0), j1 = QWModel.berekenJaar(i, A, 1);
   ok(j1.zon < j0.zon, 'jaar 2 lager'); ok(j1.zon > j0.zon * 0.97, 'maar niet veel lager');
 });
+test('investering interpoleert en begrenst', function () {
+  eq(QWModel.investering(10), 6171); near(QWModel.investering(12.5), 6775.5, 0.1);
+  near(QWModel.investering(7), 4863.6, 0.1); eq(QWModel.investering(2), 3992); eq(QWModel.investering(40), 11373);
+});
+test('adviesCapaciteit', function () {
+  eq(QWModel.adviesCapaciteit(I), 7);
+  eq(QWModel.adviesCapaciteit(Object.assign({}, I, { contract: 'dynamisch' })), 9);
+  eq(QWModel.adviesCapaciteit(Object.assign({}, I, { zon: false })), 9);
+  eq(QWModel.adviesCapaciteit(Object.assign({}, I, { warmtepomp: 'volledig', auto: true, contract: 'dynamisch' })), 25);
+  eq(QWModel.adviesCapaciteit(Object.assign({}, I, { verbruik: 500, panelen: 2 })), 5);
+});
+test('bereken vast 10 kWh: geen terugverdientijd binnen 15 jaar', function () {
+  var b = QWModel.bereken(I, A);
+  eq(b.investering, 6171); eq(b.nettoInvestering, 6171); eq(b.btwTeruggave, false);
+  eq(b.jaren.length, 15); near(b.totaalHorizon, 3919, 2); eq(b.terugverdientijd, null);
+  near(b.jaar1.zon, 261.3, 1); eq(b.advies, 7);
+});
+test('bereken dynamisch 10 kWh: btw terug en 14 jaar', function () {
+  var b = QWModel.bereken(Object.assign({}, I, { contract: 'dynamisch' }), A);
+  eq(b.btwTeruggave, true); near(b.nettoInvestering, 5100, 1); near(b.totaalHorizon, 5433, 2); near(b.terugverdientijd, 14.03, 0.05);
+});
+test('bereken warmtepomp en auto dynamisch 15 kWh: 9,4 jaar', function () {
+  var b = QWModel.bereken(Object.assign({}, I, { warmtepomp: 'volledig', auto: true, contract: 'dynamisch', capaciteit: 15 }), A);
+  near(b.terugverdientijd, 9.43, 0.05); near(b.totaalHorizon, 9481, 3);
+});
+test('prijsstijging en eigen investering', function () {
+  near(QWModel.bereken(I, Object.assign({}, A, { prijsstijging: 0.02 })).totaalHorizon, 4519, 2);
+  var b = QWModel.bereken(I, Object.assign({}, A, { investering: 3000, btwTeruggave: true }));
+  eq(b.investering, 3000); near(b.nettoInvestering, 2479.3, 0.1); ok(b.terugverdientijd > 9 && b.terugverdientijd < 11, 'rond 10 jaar');
+});
+test('bereken normaliseert rommelinvoer zelf', function () {
+  var b = QWModel.bereken({ capaciteit: 999, verbruik: 'x' }, {});
+  eq(b.invoer.capaciteit, 30); eq(b.invoer.verbruik, 3000); ok(isFinite(b.totaalHorizon), 'eindig');
+});
 done();

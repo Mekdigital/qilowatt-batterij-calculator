@@ -182,6 +182,80 @@
     return R;
   }
 
+  // ---- Meerjaren, investering en advies -----------------------------------
+
+  // Indicatieve investering voor een capaciteit, lineair tussen de tabelpunten, begrensd aan de randen.
+  function investering(capaciteit) {
+    var T = INVESTERING, i;
+    if (!(capaciteit > T[0][0])) return T[0][1];
+    if (capaciteit >= T[T.length - 1][0]) return T[T.length - 1][1];
+    for (i = 1; i < T.length; i++) {
+      if (capaciteit <= T[i][0]) {
+        var c1 = T[i - 1][0], p1 = T[i - 1][1], c2 = T[i][0], p2 = T[i][1];
+        return p1 + (p2 - p1) * (capaciteit - c1) / (c2 - c1);
+      }
+    }
+    return T[T.length - 1][1];
+  }
+
+  // Startwaarde voor de slider, volgens de formules uit Qilowatt/Tools/Formules.md.
+  function adviesCapaciteit(invoer) {
+    var t = verbruikTotalen(invoer);
+    var z = t.opwek > 0 ? Math.round(t.opwek * 0.7 / 365) : 0;
+    var d = Math.round(t.totaal * 0.7 / 240);
+    var v = (invoer.contract === 'dynamisch' || t.opwek <= 0) ? Math.max(z, d) : z;
+    return Math.max(5, Math.min(30, v));
+  }
+
+  function vulAannames(ruw) {
+    ruw = ruw || {};
+    var a = {}, k;
+    for (k in STANDAARD_AANNAMES) {
+      if (!STANDAARD_AANNAMES.hasOwnProperty(k)) continue;
+      if (k === 'btwTeruggave') { a[k] = typeof ruw[k] === 'boolean' ? ruw[k] : null; continue; }
+      if (k === 'investering') { var inv = Number(ruw[k]); a[k] = isFinite(inv) && inv > 0 ? inv : null; continue; }
+      var n = Number(ruw[k]);
+      a[k] = (ruw[k] === null || ruw[k] === undefined || ruw[k] === '' || !isFinite(n) || n < 0) ? STANDAARD_AANNAMES[k] : n;
+    }
+    if (a.horizon < 1) a.horizon = 1;
+    a.horizon = Math.round(a.horizon);
+    if (a.rendement > 1) a.rendement = 1;
+    if (a.degradatie > 1) a.degradatie = 1;
+    if (a.directAandeel > 1) a.directAandeel = 1;
+    if (a.handelsdagen > 365) a.handelsdagen = 365;
+    return a;
+  }
+
+  // Volledig resultaat: jaar 1 in detail, opbrengst per jaar over de horizon, investering en terugverdientijd.
+  function bereken(ruwInvoer, ruwAannames) {
+    var invoer = normaliseerInvoer(ruwInvoer);
+    var a = vulAannames(ruwAannames);
+    var inv = a.investering !== null ? a.investering : investering(invoer.capaciteit);
+    var btw = a.btwTeruggave !== null ? a.btwTeruggave : invoer.contract === 'dynamisch';
+    var netto = btw ? inv / 1.21 : inv;
+    var jaren = [], cum = 0, tvt = null, j, jaar1 = null;
+    for (j = 0; j < a.horizon; j++) {
+      var r = berekenJaar(invoer, a, j);
+      if (j === 0) jaar1 = r;
+      var opbrengst = r.totaal * Math.pow(1 + a.prijsstijging, j);
+      jaren.push(opbrengst);
+      if (tvt === null && opbrengst > 0 && cum + opbrengst >= netto) tvt = j + (netto - cum) / opbrengst;
+      cum += opbrengst;
+    }
+    return {
+      invoer: invoer,
+      aannames: a,
+      jaar1: jaar1,
+      jaren: jaren,
+      totaalHorizon: cum,
+      investering: inv,
+      nettoInvestering: netto,
+      btwTeruggave: btw,
+      terugverdientijd: tvt,
+      advies: adviesCapaciteit(invoer)
+    };
+  }
+
   window.QWModel = {
     PROFIELEN: PROFIELEN,
     DAGEN: DAGEN,
@@ -190,6 +264,10 @@
     STANDAARD_AANNAMES: STANDAARD_AANNAMES,
     normaliseerInvoer: normaliseerInvoer,
     verbruikTotalen: verbruikTotalen,
-    berekenJaar: berekenJaar
+    berekenJaar: berekenJaar,
+    investering: investering,
+    adviesCapaciteit: adviesCapaciteit,
+    vulAannames: vulAannames,
+    bereken: bereken
   };
 })();
