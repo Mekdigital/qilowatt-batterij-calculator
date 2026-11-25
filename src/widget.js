@@ -37,7 +37,7 @@
     { k: 'directAandeel', l: 'Zonnestroom die je direct gebruikt, zonder batterij (%)', stap: 1, pct: true, bron: 'Milieu Centraal, CE Delft: circa 30 procent' },
     { k: 'rendement', l: 'Rendement laden en ontladen (%)', stap: 1, pct: true, bron: 'Fabrikantopgave vaste systemen, circa 90 procent' },
     { k: 'degradatie', l: 'Capaciteitsverlies per jaar (%)', stap: 0.5, pct: true, bron: 'eerlijkoverthuisbatterijen.nl, thuisbatterijcheck.com: 2 procent' },
-    { k: 'horizon', l: 'Levensduur (jaar)', stap: 1, bron: 'Marktstandaard 15 jaar' },
+    { k: 'horizon', l: 'Levensduur (jaar, maximaal 50)', stap: 1, max: 50, bron: 'Marktstandaard 15 jaar' },
     { k: 'prijsverschil', l: 'Prijsverschil dal en piek, dynamisch (€ per kWh)', stap: 0.01, bron: 'thuisbatterijreus.nl 10 tot 15 cent, laadbudget 16, thuisbatterijcheck 7,5' },
     { k: 'handelsdagen', l: 'Dagen per jaar met voldoende prijsverschil', stap: 5, bron: 'Qilowatt-blog november 2026 (250), thuisbatterijreus 300' },
     { k: 'prijsstijging', l: 'Stijging stroomprijs per jaar (%)', stap: 0.5, pct: true, bron: 'Bewust conservatief op 0' },
@@ -58,7 +58,7 @@
     var std = M.STANDAARD_AANNAMES[a.k];
     var waarde = a.leeg ? '' : (a.pct ? Math.round(std * 1000) / 10 : std);
     return '<label for="qw-a-' + a.k + '">' + esc(a.l) + '</label>'
-      + '<input type="number" id="qw-a-' + a.k + '" step="' + a.stap + '" min="0" value="' + waarde + '"' + (a.leeg ? ' placeholder="automatisch"' : '') + '>'
+      + '<input type="number" id="qw-a-' + a.k + '" step="' + a.stap + '" min="0"' + (a.max ? ' max="' + a.max + '"' : '') + ' value="' + waarde + '"' + (a.leeg ? ' placeholder="automatisch"' : '') + '>'
       + '<small>' + esc(a.bron) + '</small>';
   }
 

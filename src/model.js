@@ -103,8 +103,9 @@
 
   // Jaartotalen in kWh per onderdeel.
   function verbruikTotalen(invoer) {
+    // Een ingevulde jaaropwek telt altijd; anders panelen x opbrengst (0 panelen is geen zon).
     var opwek = 0;
-    if (invoer.zon && invoer.panelen > 0) {
+    if (invoer.zon) {
       opwek = invoer.jaaropwek > 0 ? invoer.jaaropwek : invoer.panelen * invoer.opbrengstPerPaneel;
     }
     var warmtepomp = invoer.warmtepomp === 'geen' ? 0 : invoer.warmtepompKwh[invoer.warmtepomp];
@@ -217,9 +218,8 @@
       var n = Number(ruw[k]);
       a[k] = (ruw[k] === null || ruw[k] === undefined || ruw[k] === '' || !isFinite(n) || n < 0) ? STANDAARD_AANNAMES[k] : n;
     }
-    if (a.horizon < 1) a.horizon = 1;
-    a.horizon = Math.round(a.horizon);
-    if (a.rendement > 1) a.rendement = 1;
+    a.horizon = Math.min(50, Math.max(1, Math.round(a.horizon)));
+    a.rendement = Math.min(1, Math.max(0.5, a.rendement));
     if (a.degradatie > 1) a.degradatie = 1;
     if (a.directAandeel > 1) a.directAandeel = 1;
     if (a.handelsdagen > 365) a.handelsdagen = 365;

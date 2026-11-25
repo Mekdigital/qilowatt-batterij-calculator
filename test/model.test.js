@@ -117,4 +117,17 @@ test('bereken normaliseert rommelinvoer zelf', function () {
   var b = QWModel.bereken({ capaciteit: 999, verbruik: 'x' }, {});
   eq(b.invoer.capaciteit, 30); eq(b.invoer.verbruik, 3000); ok(isFinite(b.totaalHorizon), 'eindig');
 });
+test('horizon wordt begrensd op 1 tot 50 jaar', function () {
+  eq(QWModel.bereken(I, Object.assign({}, A, { horizon: 15000000 })).jaren.length, 50);
+  eq(QWModel.bereken(I, Object.assign({}, A, { horizon: 0 })).jaren.length, 1);
+});
+test('jaaropwek telt ook als het aantal panelen 0 is', function () {
+  eq(QWModel.verbruikTotalen(Object.assign({}, I, { panelen: 0, jaaropwek: 3500 })).opwek, 3500);
+  eq(QWModel.verbruikTotalen(Object.assign({}, I, { panelen: 0, jaaropwek: null })).opwek, 0);
+});
+test('rendement 0 geeft geen NaN en wordt begrensd', function () {
+  var b = QWModel.bereken(Object.assign({}, I, { verbruik: 0 }), Object.assign({}, A, { rendement: 0 }));
+  ok(isFinite(b.jaar1.totaal), 'totaal eindig: ' + b.jaar1.totaal);
+  ok(b.aannames.rendement >= 0.5, 'rendement minimaal 50 procent');
+});
 done();

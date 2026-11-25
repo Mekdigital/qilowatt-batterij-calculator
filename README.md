@@ -47,7 +47,9 @@ git add -A && git commit -m "feat: ..."
 git tag 2026-MM-DD && git push && git push --tags
 ```
 
-Zet daarna in elk Webflow Embed-element de `@tag` in de script-URL op de nieuwe tag. jsDelivr cachet per tag, dus een oude tag blijft altijd dezelfde code serveren.
+Zet daarna in elk Webflow Embed-element de `@tag` in de script-URL op de nieuwe tag. jsDelivr cachet per tag, dus een oude tag blijft altijd dezelfde code serveren. Een tweede versie op dezelfde dag krijgt een volgnummer, bijvoorbeeld `2026-11-25.1`.
+
+Plaats per pagina één embed. Twee calculators op dezelfde pagina worden niet ondersteund.
 
 Controleer de nieuwe URL:
 
