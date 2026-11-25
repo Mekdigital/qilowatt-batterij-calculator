@@ -60,11 +60,73 @@
     investering: null          // null: uit de tabel
   };
 
+  // ---- Invoer -------------------------------------------------------------
+
+  function getal(x, standaard, minimum) {
+    var n = Number(x);
+    if (x === null || x === undefined || x === '' || !isFinite(n)) return standaard;
+    if (n < (minimum === undefined ? 0 : minimum)) return standaard;
+    return n;
+  }
+  function keuze(x, opties, standaard) {
+    return opties.indexOf(x) >= 0 ? x : standaard;
+  }
+
+  // Maakt van ruwe (formulier)invoer een volledig en geldig invoerobject.
+  function normaliseerInvoer(ruw) {
+    ruw = ruw || {};
+    var S = STANDAARD_INVOER;
+    var cap = getal(ruw.capaciteit, S.capaciteit);
+    cap = Math.round(Math.max(5, Math.min(30, cap)));
+    var jaaropwek = getal(ruw.jaaropwek, 0);
+    return {
+      verbruik: getal(ruw.verbruik, S.verbruik),
+      zon: ruw.zon === undefined ? S.zon : !!ruw.zon,
+      panelen: getal(ruw.panelen, S.panelen),
+      opbrengstPerPaneel: getal(ruw.opbrengstPerPaneel, S.opbrengstPerPaneel),
+      jaaropwek: jaaropwek > 0 ? jaaropwek : null,
+      auto: ruw.auto === undefined ? S.auto : !!ruw.auto,
+      kmPerJaar: getal(ruw.kmPerJaar, S.kmPerJaar),
+      thuisladenAandeel: Math.min(1, getal(ruw.thuisladenAandeel, S.thuisladenAandeel)),
+      kwhPerKm: getal(ruw.kwhPerKm, S.kwhPerKm),
+      warmtepomp: keuze(ruw.warmtepomp, ['geen', 'hybride', 'volledig'], S.warmtepomp),
+      warmtepompKwh: {
+        hybride: getal(ruw.warmtepompKwh && ruw.warmtepompKwh.hybride, S.warmtepompKwh.hybride),
+        volledig: getal(ruw.warmtepompKwh && ruw.warmtepompKwh.volledig, S.warmtepompKwh.volledig)
+      },
+      aircoUnits: getal(ruw.aircoUnits, S.aircoUnits),
+      aircoKwhPerUnit: getal(ruw.aircoKwhPerUnit, S.aircoKwhPerUnit),
+      contract: keuze(ruw.contract, ['vast', 'dynamisch'], S.contract),
+      capaciteit: cap
+    };
+  }
+
+  // Jaartotalen in kWh per onderdeel.
+  function verbruikTotalen(invoer) {
+    var opwek = 0;
+    if (invoer.zon && invoer.panelen > 0) {
+      opwek = invoer.jaaropwek > 0 ? invoer.jaaropwek : invoer.panelen * invoer.opbrengstPerPaneel;
+    }
+    var warmtepomp = invoer.warmtepomp === 'geen' ? 0 : invoer.warmtepompKwh[invoer.warmtepomp];
+    var auto = invoer.auto ? invoer.kmPerJaar * invoer.kwhPerKm * invoer.thuisladenAandeel : 0;
+    var airco = invoer.aircoUnits * invoer.aircoKwhPerUnit;
+    return {
+      basis: invoer.verbruik,
+      warmtepomp: warmtepomp,
+      auto: auto,
+      airco: airco,
+      totaal: invoer.verbruik + warmtepomp + auto + airco,
+      opwek: opwek
+    };
+  }
+
   window.QWModel = {
     PROFIELEN: PROFIELEN,
     DAGEN: DAGEN,
     INVESTERING: INVESTERING,
     STANDAARD_INVOER: STANDAARD_INVOER,
-    STANDAARD_AANNAMES: STANDAARD_AANNAMES
+    STANDAARD_AANNAMES: STANDAARD_AANNAMES,
+    normaliseerInvoer: normaliseerInvoer,
+    verbruikTotalen: verbruikTotalen
   };
 })();
