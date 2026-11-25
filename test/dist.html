@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html lang="nl"><head><meta charset="UTF-8"><title>Dist tests</title></head>
+<body>
+<pre id="out"></pre>
+<div id="qw-calc-root"></div>
+<script src="assert.js"></script>
+<script src="../dist/calculator.js"></script>
+<script>test('bundel injecteert zijn eigen stylesheet', function () { ok(document.getElementById('qw-calc-css'), 'style#qw-calc-css aanwezig'); ok(window.QWCalc.CSS.length > 500, 'CSS gevuld'); });</script>
+<script src="widget.test.js"></script>
+</body></html>
