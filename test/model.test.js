@@ -40,4 +40,47 @@ test('normaliseerInvoer vangt rommel', function () {
   eq(QWModel.normaliseerInvoer({ capaciteit: 12.6 }).capaciteit, 13);
   eq(QWModel.normaliseerInvoer({}).opbrengstPerPaneel, 350);
 });
+var A = QWModel.STANDAARD_AANNAMES, I = QWModel.STANDAARD_INVOER;
+function jaar(over, aOver) { return QWModel.berekenJaar(Object.assign({}, I, over || {}), Object.assign({}, A, aOver || {}), 0); }
+test('voorbeeldhuishouden vast 10 kWh', function () {
+  var r = jaar();
+  near(r.zon, 261.3, 1); eq(r.inkoop, 0); eq(r.verkoop, 0); near(r.totaal, 261.3, 1);
+  near(r.verliesZonderBatterij, 563.5, 1);
+  near(r.eigenVerbruikZonder, 0.300, 0.005); near(r.eigenVerbruikMet, 0.668, 0.005);
+  near(r.terugleverZonder, 2450, 1); near(r.terugleverMet, 1163, 1);
+  eq(r.maanden.length, 12);
+});
+test('zonlaag vlakt af boven de avondvraag', function () {
+  near(jaar({ capaciteit: 5 }).zon, 250.8, 1);
+  near(jaar({ capaciteit: 20 }).zon, 261.3, 1);
+});
+test('dynamisch 10 kWh: drie lagen', function () {
+  var r = jaar({ contract: 'dynamisch' });
+  near(r.zon, 248.4, 1); near(r.inkoop, 65.1, 1); near(r.verkoop, 65.6, 1); near(r.totaal, 379.1, 1);
+  near(r.terugleverMet, 1050, 1);
+});
+test('seizoenen: inkoop nul in juni, verkoop nul in januari', function () {
+  var m = jaar({ contract: 'dynamisch' }).maanden;
+  near(m[5].inkoop, 0, 0.01); near(m[0].verkoop, 0, 0.01);
+  ok(m[0].inkoop > 5, 'januari inkoop > 5'); ok(m[5].verkoop > 5, 'juni verkoop > 5');
+});
+test('geen zon: vast nul, dynamisch alleen inkoop', function () {
+  var v = jaar({ zon: false });
+  eq(v.totaal, 0); eq(v.verliesZonderBatterij, 0); eq(v.eigenVerbruikZonder, 0); eq(v.eigenVerbruikMet, 0);
+  var d = jaar({ zon: false, contract: 'dynamisch' });
+  near(d.inkoop, 241.6, 1); eq(d.verkoop, 0); eq(d.zon, 0);
+});
+test('warmtepomp en auto dynamisch 15 kWh', function () {
+  var r = jaar({ warmtepomp: 'volledig', auto: true, contract: 'dynamisch', capaciteit: 15 });
+  near(r.zon, 472.9, 1); near(r.inkoop, 197.1, 1); near(r.verkoop, 0, 0.5); near(r.eigenVerbruikMet, 1.0, 0.005);
+});
+test('netto negatieve teruglevering verhoogt de zonlaag', function () {
+  var r = jaar({}, { terugleverkosten: 0.12 });
+  near(r.zon, 351.4, 1); near(r.verliesZonderBatterij, 735.0, 1);
+});
+test('degradatie: jaar 2 heeft 98 procent capaciteit', function () {
+  var i = Object.assign({}, I, { capaciteit: 5 });
+  var j0 = QWModel.berekenJaar(i, A, 0), j1 = QWModel.berekenJaar(i, A, 1);
+  ok(j1.zon < j0.zon, 'jaar 2 lager'); ok(j1.zon > j0.zon * 0.97, 'maar niet veel lager');
+});
 done();

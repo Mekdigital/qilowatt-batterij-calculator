@@ -120,6 +120,68 @@
     };
   }
 
+  // ---- Maandmodel ---------------------------------------------------------
+
+  // Rekent één jaar door. jaarIndex 0 is jaar 1; de capaciteit krimpt met de degradatie.
+  // Volgorde per gemiddelde dag: zonlaag, dan inkoop (dynamisch), dan verkoop (dynamisch).
+  function berekenJaar(invoer, a, jaarIndex) {
+    var t = verbruikTotalen(invoer);
+    var dyn = invoer.contract === 'dynamisch';
+    var cap = invoer.capaciteit * Math.pow(1 - a.degradatie, jaarIndex || 0);
+    var nettoVast = a.vergoeding - a.terugleverkosten;
+    var teruglever = dyn ? a.middagprijsDyn : nettoVast;
+    var f = a.handelsdagen / 365;
+    var velden = ['zon', 'inkoop', 'verkoop', 'totaal', 'direct', 'geladenZon', 'geladenNet', 'verkocht', 'terugleverZonder', 'terugleverMet'];
+    var R = {}, maanden = [], m, k;
+    for (k = 0; k < velden.length; k++) R[velden[k]] = 0;
+
+    for (m = 0; m < 12; m++) {
+      var d = DAGEN[m];
+      var zonDag = t.opwek * PROFIELEN.opwek[m] / d;
+      var verbruikDag = (t.basis * PROFIELEN.basis[m] + t.warmtepomp * PROFIELEN.warmtepomp[m]
+        + t.auto * PROFIELEN.auto[m] + t.airco * PROFIELEN.airco[m]) / d;
+
+      var direct = Math.min(zonDag * a.directAandeel, verbruikDag);
+      var overschot = Math.max(0, zonDag - direct);
+      var rest = Math.max(0, verbruikDag - direct);
+
+      // Laag 1: zonnestroom opslaan voor de avond en nacht.
+      var geladenZon = Math.min(overschot, rest / a.rendement, cap);
+      var geleverdZon = geladenZon * a.rendement;
+      var zon = geleverdZon * a.stroomprijs - geladenZon * teruglever;
+
+      // Laag 2a: goedkoop inkopen op daluren voor de resterende vraag.
+      var ruimte = Math.max(0, cap - geladenZon);
+      var restvraag = Math.max(0, rest - geleverdZon);
+      var geladenNet = dyn ? Math.min(ruimte, restvraag / a.rendement) : 0;
+      var inkoop = geladenNet * a.rendement * a.prijsverschil * f;
+
+      // Laag 2b: resterend zonoverschot opslaan en in de avondpiek verkopen.
+      var ruimte2 = Math.max(0, ruimte - geladenNet);
+      var over = Math.max(0, overschot - geladenZon);
+      var verkocht = dyn ? Math.min(ruimte2, over) : 0;
+      var verkoop = verkocht * (a.rendement * a.piekprijsDyn - a.middagprijsDyn) * f;
+
+      var md = {
+        zon: zon * d, inkoop: inkoop * d, verkoop: verkoop * d, totaal: (zon + inkoop + verkoop) * d,
+        direct: direct * d, geladenZon: geladenZon * d, geladenNet: geladenNet * d, verkocht: verkocht * d,
+        terugleverZonder: overschot * d,
+        terugleverMet: (over - verkocht + verkocht * a.rendement) * d
+      };
+      maanden.push(md);
+      for (k = 0; k < velden.length; k++) R[velden[k]] += md[velden[k]];
+    }
+
+    R.maanden = maanden;
+    // Wat een bezoeker zonder batterij op een vast contract vanaf 2027 verliest.
+    R.verliesZonderBatterij = R.terugleverZonder * (a.stroomprijs - nettoVast);
+    R.eigenVerbruikZonder = t.opwek > 0 ? R.direct / t.opwek : 0;
+    R.eigenVerbruikMet = t.opwek > 0 ? (R.direct + R.geladenZon) / t.opwek : 0;
+    R.opwek = t.opwek;
+    R.verbruik = t.totaal;
+    return R;
+  }
+
   window.QWModel = {
     PROFIELEN: PROFIELEN,
     DAGEN: DAGEN,
@@ -127,6 +189,7 @@
     STANDAARD_INVOER: STANDAARD_INVOER,
     STANDAARD_AANNAMES: STANDAARD_AANNAMES,
     normaliseerInvoer: normaliseerInvoer,
-    verbruikTotalen: verbruikTotalen
+    verbruikTotalen: verbruikTotalen,
+    berekenJaar: berekenJaar
   };
 })();
